@@ -122,13 +122,17 @@ public class PasswordSentinel {
         savedPanel.add(new JScrollPane(savedPasswordsList), BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel();
-        JButton saveButton = new JButton("Save Password");
+        JButton saveButton = new JButton("Save Generated Password");
         saveButton.addActionListener(e -> savePassword());
         buttonPanel.add(saveButton);
 
         JButton deleteButton = new JButton("Delete Selected");
         deleteButton.addActionListener(e -> deletePassword());
         buttonPanel.add(deleteButton);
+
+        JButton addManualButton = new JButton("Add Manual Entry");
+        addManualButton.addActionListener(e -> addManualEntry());
+        buttonPanel.add(addManualButton);
 
         savedPanel.add(buttonPanel, BorderLayout.SOUTH);
 
@@ -217,11 +221,11 @@ public class PasswordSentinel {
     }
 
     private void savePassword() {
-        String email = JOptionPane.showInputDialog(frame, "Enter label:");
+        String label = JOptionPane.showInputDialog(frame, "Enter label:");
         String password = passwordField.getText();
-        if (email != null && !email.isEmpty()) {
-            savedPasswords.add(new PasswordEntry(email, password));
-            listModel.addElement(email + ": " + password);
+        if (label != null && !label.isEmpty()) {
+            savedPasswords.add(new PasswordEntry(label, password));
+            listModel.addElement(label + ": " + password);
         } else {
             JOptionPane.showMessageDialog(frame, "Please enter a label.");
         }
@@ -235,17 +239,43 @@ public class PasswordSentinel {
         }
     }
 
+    private void addManualEntry() {
+        JTextField siteField = new JTextField();
+        JTextField userField = new JTextField();
+        JTextField passField = new JTextField();
+        Object[] fields = {
+                "Site:", siteField,
+                "Username:", userField,
+                "Password:", passField
+        };
+
+        int option = JOptionPane.showConfirmDialog(frame, fields, "Add Manual Entry", JOptionPane.OK_CANCEL_OPTION);
+
+        if (option == JOptionPane.OK_OPTION) {
+            String site = siteField.getText();
+            String user = userField.getText();
+            String pass = passField.getText();
+
+            if (!site.isEmpty() && !user.isEmpty() && !pass.isEmpty()) {
+                savedPasswords.add(new PasswordEntry(site + " (" + user + ")", pass));
+                listModel.addElement(site + " (" + user + "): " + pass);
+            } else {
+                JOptionPane.showMessageDialog(frame, "All fields are required.");
+            }
+        }
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(PasswordSentinel::new);
     }
 }
 
 class PasswordEntry {
-    String email;
+    String label;
     String password;
 
-    public PasswordEntry(String email, String password) {
-        this.email = email;
+    public PasswordEntry(String label, String password) {
+        this.label = label;
         this.password = password;
     }
 }
