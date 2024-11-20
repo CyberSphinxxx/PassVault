@@ -1,6 +1,7 @@
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -25,6 +26,8 @@ public class PasswordSentinel {
     private final String LOWERCASE = "abcdefghijklmnopqrstuvwxyz";
     private final String NUMBERS = "0123456789";
     private final String SYMBOLS = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+    
+    private static final String STORAGE_FILE = "passwords.dat"; // File to store the passwords
 
     public PasswordSentinel() {
         savedPasswords = new ArrayList<>();
@@ -35,6 +38,9 @@ public class PasswordSentinel {
         frame.setSize(600, 600);
         frame.setLayout(new BorderLayout());
         frame.setBackground(Color.DARK_GRAY);
+
+        // Load saved passwords from file
+        loadPasswords();
 
         createUI();
 
@@ -113,7 +119,6 @@ public class PasswordSentinel {
         // Saved Passwords Panel
         JPanel savedPanel = new JPanel();
         savedPanel.setLayout(new BorderLayout());
-        savedPanel.setBorder(BorderFactory.createTitledBorder("Saved Passwords"));
 
         JLabel savedLabel = new JLabel("Saved Passwords");
         savedPanel.add(savedLabel, BorderLayout.NORTH);
@@ -225,7 +230,8 @@ public class PasswordSentinel {
         String password = passwordField.getText();
         if (label != null && !label.isEmpty()) {
             savedPasswords.add(new PasswordEntry(label, password));
-            listModel.addElement(label + ": " + password);
+            listModel.addElement(label + ": " + password); // Add password in readable format
+            savePasswords(); // Save the updated list to file
         } else {
             JOptionPane.showMessageDialog(frame, "Please enter a label.");
         }
@@ -236,15 +242,16 @@ public class PasswordSentinel {
         if (selectedIndex != -1) {
             savedPasswords.remove(selectedIndex);
             listModel.remove(selectedIndex);
+            savePasswords(); // Save the updated list to file
         }
     }
 
     private void addManualEntry() {
-        JTextField siteField = new JTextField();
+        JTextField labelField = new JTextField();
         JTextField userField = new JTextField();
         JTextField passField = new JTextField();
         Object[] fields = {
-                "Site:", siteField,
+                "Label:", labelField,
                 "Username:", userField,
                 "Password:", passField
         };
@@ -252,16 +259,36 @@ public class PasswordSentinel {
         int option = JOptionPane.showConfirmDialog(frame, fields, "Add Manual Entry", JOptionPane.OK_CANCEL_OPTION);
 
         if (option == JOptionPane.OK_OPTION) {
-            String site = siteField.getText();
+            String label = labelField.getText();
             String user = userField.getText();
             String pass = passField.getText();
 
-            if (!site.isEmpty() && !user.isEmpty() && !pass.isEmpty()) {
-                savedPasswords.add(new PasswordEntry(site + " (" + user + ")", pass));
-                listModel.addElement(site + " (" + user + "): " + pass);
+            if (!label.isEmpty() && !user.isEmpty() && !pass.isEmpty()) {
+                savedPasswords.add(new PasswordEntry(label, user, pass)); // store full entry
+                listModel.addElement(label + " (" + user + "): " + pass); // display in list
+                savePasswords(); // Save the updated list to file
             } else {
                 JOptionPane.showMessageDialog(frame, "All fields are required.");
             }
+        }
+    }
+
+    private void savePasswords() {
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(STORAGE_FILE))) {
+            out.writeObject(savedPasswords); // Serialize the list of passwords
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadPasswords() {
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(STORAGE_FILE))) {
+            savedPasswords = (List<PasswordEntry>) in.readObject(); // Deserialize the saved passwords
+            for (PasswordEntry entry : savedPasswords) {
+                listModel.addElement(entry.label + " (" + entry.username + "): " + entry.password);
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
         }
     }
 
@@ -270,12 +297,20 @@ public class PasswordSentinel {
     }
 }
 
-class PasswordEntry {
+class PasswordEntry implements Serializable {
     String label;
+    String username;
     String password;
 
     public PasswordEntry(String label, String password) {
         this.label = label;
+        this.username = "";
+        this.password = password;
+    }
+
+    public PasswordEntry(String label, String username, String password) {
+        this.label = label;
+        this.username = username;
         this.password = password;
     }
 }
