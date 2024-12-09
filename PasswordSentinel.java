@@ -26,7 +26,7 @@ public class PasswordSentinel {
     private final String LOWERCASE = "abcdefghijklmnopqrstuvwxyz";
     private final String NUMBERS = "0123456789";
     private final String SYMBOLS = "!@#$%^&*()_+-=[]{}|;:,.<>?";
-    
+
     private static final String STORAGE_FILE = "passwords.dat"; // File to store the passwords
 
     public PasswordSentinel() {
@@ -37,7 +37,6 @@ public class PasswordSentinel {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(600, 600);
         frame.setLayout(new BorderLayout());
-        frame.setBackground(Color.DARK_GRAY);
 
         // Load saved passwords from file
         loadPasswords();
@@ -49,107 +48,24 @@ public class PasswordSentinel {
 
     private void createUI() {
         JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10); // Padding
+        mainPanel.setLayout(new BorderLayout());
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Add padding
+        mainPanel.setBackground(new Color(240, 248, 255)); // Light blue background
 
-        // Password Generator Panel
-        JPanel generatorPanel = new JPanel();
-        generatorPanel.setLayout(new GridBagLayout());
-        generatorPanel.setBorder(BorderFactory.createTitledBorder("Password Generator"));
+        JPanel generatorPanel = createGeneratorPanel();
+        JPanel savedPanel = createSavedPasswordsPanel();
 
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 2;
-        generatorPanel.add(new JLabel("Generate Your Password"), gbc);
-
-        gbc.gridwidth = 1;
-        gbc.gridy++;
-        passwordField = new JTextField(20);
-        passwordField.setEditable(false);
-        generatorPanel.add(passwordField, gbc);
-
-        gbc.gridx++;
-        JButton copyButton = new JButton("Copy");
-        copyButton.addActionListener(e -> copyPassword());
-        generatorPanel.add(copyButton, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy++;
-        generatorPanel.add(new JLabel("Password Length:"), gbc);
-
-        gbc.gridx++;
-        lengthSlider = new JSlider(6, 30, 12);
-        generatorPanel.add(lengthSlider, gbc);
-
-        gbc.gridx++;
-        lengthValueLabel = new JLabel("Length: 12");
-        generatorPanel.add(lengthValueLabel, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy++;
-        includeUppercase = new JCheckBox("Uppercase", true);
-        generatorPanel.add(includeUppercase, gbc);
-
-        gbc.gridy++;
-        includeLowercase = new JCheckBox("Lowercase", true);
-        generatorPanel.add(includeLowercase, gbc);
-
-        gbc.gridy++;
-        includeNumbers = new JCheckBox("Numbers", true);
-        generatorPanel.add(includeNumbers, gbc);
-
-        gbc.gridy++;
-        includeSymbols = new JCheckBox("Symbols", true);
-        generatorPanel.add(includeSymbols, gbc);
-
-        gbc.gridy++;
-        strengthIndicator = new JLabel("Password Strength: Weak");
-        generatorPanel.add(strengthIndicator, gbc);
-
-        gbc.gridy++;
-        strengthImage = new JLabel();
-        generatorPanel.add(strengthImage, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 2;
-        mainPanel.add(generatorPanel, gbc);
-
-        // Saved Passwords Panel
-        JPanel savedPanel = new JPanel();
-        savedPanel.setLayout(new BorderLayout());
-
-        JLabel savedLabel = new JLabel("Saved Passwords");
-        savedPanel.add(savedLabel, BorderLayout.NORTH);
-
-        savedPasswordsList = new JList<>(listModel);
-        savedPanel.add(new JScrollPane(savedPasswordsList), BorderLayout.CENTER);
-
-        JPanel buttonPanel = new JPanel();
-        JButton saveButton = new JButton("Save Generated Password");
-        saveButton.addActionListener(e -> savePassword());
-        buttonPanel.add(saveButton);
-
-        JButton deleteButton = new JButton("Delete Selected");
-        deleteButton.addActionListener(e -> deletePassword());
-        buttonPanel.add(deleteButton);
-
-        JButton addManualButton = new JButton("Add Manual Entry");
-        addManualButton.addActionListener(e -> addManualEntry());
-        buttonPanel.add(addManualButton);
-
-        savedPanel.add(buttonPanel, BorderLayout.SOUTH);
-
-        gbc.gridy++;
-        mainPanel.add(savedPanel, gbc);
+        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, generatorPanel, savedPanel);
+        splitPane.setDividerLocation(300);
+        splitPane.setResizeWeight(0.5); // Split pane proportions
+        mainPanel.add(splitPane, BorderLayout.CENTER);
 
         frame.add(mainPanel, BorderLayout.CENTER);
 
         // Add listeners
         lengthSlider.addChangeListener(e -> {
             int length = lengthSlider.getValue();
-            lengthValueLabel.setText("Length : " + length);
+            lengthValueLabel.setText("Length: " + length);
             generatePassword();
         });
 
@@ -160,6 +76,118 @@ public class PasswordSentinel {
 
         // Generate initial password
         generatePassword();
+    }
+
+    private JPanel createGeneratorPanel() {
+        JPanel generatorPanel = new JPanel();
+        generatorPanel.setLayout(new GridBagLayout());
+        generatorPanel.setBorder(BorderFactory.createTitledBorder("Password Generator"));
+        generatorPanel.setBackground(new Color(224, 255, 255)); // Light cyan background
+    
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.anchor = GridBagConstraints.WEST; // Align components to the left
+    
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        generatorPanel.add(new JLabel("Generate Your Password"), gbc);
+    
+        gbc.gridwidth = 1;
+        gbc.gridy++;
+        passwordField = new JTextField(20);
+        passwordField.setEditable(false);
+        passwordField.setBackground(Color.WHITE); // Background color for text field
+        generatorPanel.add(passwordField, gbc);
+    
+        gbc.gridx++;
+        JButton copyButton = new JButton("Copy");
+        copyButton.addActionListener(e -> copyPassword());
+        copyButton.setBackground(new Color(173, 216, 230)); // Light blue button
+        generatorPanel.add(copyButton, gbc);
+    
+        gbc.gridx = 0;
+        gbc.gridy++;
+        generatorPanel.add(new JLabel("Password Length:"), gbc);
+    
+        gbc.gridx++;
+        lengthSlider = new JSlider(6, 30, 12);
+        lengthSlider.setBackground(new Color(224, 255, 255)); // Light cyan background
+        generatorPanel.add(lengthSlider, gbc);
+    
+        gbc.gridx++;
+        lengthValueLabel = new JLabel("Length: 12");
+        generatorPanel.add(lengthValueLabel, gbc);
+    
+        // Align checkboxes in a single column
+        gbc.gridx = 0;
+        gbc.gridy++;
+        gbc.gridwidth = 2; // Span both columns
+        includeUppercase = new JCheckBox("Uppercase", true);
+        includeUppercase.setBackground(new Color(224, 255, 255)); // Light cyan background
+        generatorPanel.add(includeUppercase, gbc);
+    
+        gbc.gridy++;
+        includeLowercase = new JCheckBox("Lowercase", true);
+        includeLowercase.setBackground(new Color(224, 255, 255)); // Light cyan background
+        generatorPanel.add(includeLowercase, gbc);
+    
+        gbc.gridy++;
+        includeNumbers = new JCheckBox("Numbers", true);
+        includeNumbers.setBackground(new Color(224, 255, 255)); // Light cyan background
+        generatorPanel.add(includeNumbers, gbc);
+    
+        gbc.gridy++;
+        includeSymbols = new JCheckBox("Symbols", true);
+        includeSymbols.setBackground(new Color(224, 255, 255)); // Light cyan background
+        generatorPanel.add(includeSymbols, gbc);
+    
+        gbc.gridy++;
+        strengthIndicator = new JLabel("Password Strength: Weak");
+        generatorPanel.add(strengthIndicator, gbc);
+    
+        gbc.gridy++;
+        strengthImage = new JLabel();
+        generatorPanel.add(strengthImage, gbc);
+    
+        return generatorPanel;
+    }
+    
+
+    private JPanel createSavedPasswordsPanel() {
+        JPanel savedPanel = new JPanel();
+        savedPanel.setLayout(new BorderLayout());
+        savedPanel.setBorder(BorderFactory.createTitledBorder("Saved Passwords"));
+        savedPanel.setBackground(new Color(240, 255, 240)); // Honeydew background
+
+        JLabel savedLabel = new JLabel("Saved Passwords");
+        savedLabel.setHorizontalAlignment(JLabel.CENTER); // Center the label
+        savedPanel.add(savedLabel, BorderLayout.NORTH);
+
+        savedPasswordsList = new JList<>(listModel);
+        savedPanel.add(new JScrollPane(savedPasswordsList), BorderLayout.CENTER);
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setBackground(new Color(240, 255, 240)); // Honeydew background
+
+        JButton saveButton = new JButton("Save Generated Password");
+        saveButton.addActionListener(e -> savePassword());
+        saveButton.setBackground(new Color(144, 238, 144)); // Light green button
+        buttonPanel.add(saveButton);
+
+        JButton deleteButton = new JButton("Delete Selected");
+        deleteButton.addActionListener(e -> deletePassword());
+        deleteButton.setBackground(new Color(255, 182, 193)); // Light pink button
+        buttonPanel.add(deleteButton);
+
+        JButton addManualButton = new JButton("Add Manual Entry");
+        addManualButton.addActionListener(e -> addManualEntry());
+        addManualButton.setBackground(new Color(173, 216, 230)); // Light blue button
+        buttonPanel.add(addManualButton);
+
+        savedPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        return savedPanel;
     }
 
     private void generatePassword() {
@@ -297,20 +325,20 @@ public class PasswordSentinel {
     }
 }
 
-class PasswordEntry implements Serializable {
-    String label;
-    String username;
-    String password;
+    class PasswordEntry implements Serializable {
+        String label;
+        String username;
+        String password;
 
-    public PasswordEntry(String label, String password) {
-        this.label = label;
-        this.username = "";
-        this.password = password;
-    }
+        public PasswordEntry(String label, String password) {
+            this.label = label;
+            this.username = "";
+            this.password = password;
+        }
 
-    public PasswordEntry(String label, String username, String password) {
-        this.label = label;
-        this.username = username;
-        this.password = password;
+        public PasswordEntry(String label, String username, String password) {
+            this.label = label;
+            this.username = username;
+            this.password = password;
+        }
     }
-}
