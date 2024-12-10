@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
 public class PasswordSentinel {
     private JFrame frame;
@@ -19,25 +20,24 @@ public class PasswordSentinel {
     private JLabel strengthIndicator;
     private JLabel strengthImage;
     private List<PasswordEntry> savedPasswords;
-    private JList<String> savedPasswordsList;
-    private DefaultListModel<String> listModel;
+    private JTable savedPasswordsTable;
+    private DefaultTableModel tableModel;
 
     private final String UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private final String LOWERCASE = "abcdefghijklmnopqrstuvwxyz";
     private final String NUMBERS = "0123456789";
     private final String SYMBOLS = "!@#$%^&*()_+-=[]{}|;:,.<>?";
-    
-    private static final String STORAGE_FILE = "passwords.dat"; // File to store the passwords
+
+    private static final File STORAGE_FILE = new File("passwords.dat");
 
     public PasswordSentinel() {
         savedPasswords = new ArrayList<>();
-        listModel = new DefaultListModel<>();
+        tableModel = new DefaultTableModel(new String[]{"Label", "Username", "Password"}, 0);
 
         frame = new JFrame("Password Sentinel");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(600, 600);
+        frame.setSize(800, 600);
         frame.setLayout(new BorderLayout());
-        frame.setBackground(Color.DARK_GRAY);
 
         // Load saved passwords from file
         loadPasswords();
@@ -49,14 +49,43 @@ public class PasswordSentinel {
 
     private void createUI() {
         JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10); // Padding
+        mainPanel.setLayout(new BorderLayout());
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        mainPanel.setBackground(new Color(240, 248, 255));
 
-        // Password Generator Panel
+        JPanel generatorPanel = createGeneratorPanel();
+        JPanel savedPanel = createSavedPasswordsPanel();
+
+        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, generatorPanel, savedPanel);
+        splitPane.setDividerLocation(300);
+        splitPane.setResizeWeight(0.5);
+        mainPanel.add(splitPane, BorderLayout.CENTER);
+
+        frame.add(mainPanel, BorderLayout.CENTER);
+
+        lengthSlider.addChangeListener(e -> {
+            int length = lengthSlider.getValue();
+            lengthValueLabel.setText("Length: " + length);
+            generatePassword();
+        });
+
+        includeUppercase.addActionListener(e -> generatePassword());
+        includeLowercase.addActionListener(e -> generatePassword());
+        includeNumbers.addActionListener(e -> generatePassword());
+        includeSymbols.addActionListener(e -> generatePassword());
+
+        generatePassword();
+    }
+
+    private JPanel createGeneratorPanel() {
         JPanel generatorPanel = new JPanel();
         generatorPanel.setLayout(new GridBagLayout());
         generatorPanel.setBorder(BorderFactory.createTitledBorder("Password Generator"));
+        generatorPanel.setBackground(new Color(224, 255, 255));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.anchor = GridBagConstraints.WEST;
 
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -67,6 +96,7 @@ public class PasswordSentinel {
         gbc.gridy++;
         passwordField = new JTextField(20);
         passwordField.setEditable(false);
+        passwordField.setBackground(Color.WHITE);
         generatorPanel.add(passwordField, gbc);
 
         gbc.gridx++;
@@ -111,22 +141,22 @@ public class PasswordSentinel {
         strengthImage = new JLabel();
         generatorPanel.add(strengthImage, gbc);
 
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 2;
-        mainPanel.add(generatorPanel, gbc);
+        return generatorPanel;
+    }
 
-        // Saved Passwords Panel
+    private JPanel createSavedPasswordsPanel() {
         JPanel savedPanel = new JPanel();
         savedPanel.setLayout(new BorderLayout());
+        savedPanel.setBorder(BorderFactory.createTitledBorder("Saved Passwords"));
+        savedPanel.setBackground(new Color(240, 255, 240));
 
-        JLabel savedLabel = new JLabel("Saved Passwords");
-        savedPanel.add(savedLabel, BorderLayout.NORTH);
-
-        savedPasswordsList = new JList<>(listModel);
-        savedPanel.add(new JScrollPane(savedPasswordsList), BorderLayout.CENTER);
+        savedPasswordsTable = new JTable(tableModel);
+        JScrollPane scrollPane = new JScrollPane(savedPasswordsTable);
+        savedPanel.add(scrollPane, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel();
+        buttonPanel.setBackground(new Color(240, 255, 240));
+
         JButton saveButton = new JButton("Save Generated Password");
         saveButton.addActionListener(e -> savePassword());
         buttonPanel.add(saveButton);
@@ -141,25 +171,7 @@ public class PasswordSentinel {
 
         savedPanel.add(buttonPanel, BorderLayout.SOUTH);
 
-        gbc.gridy++;
-        mainPanel.add(savedPanel, gbc);
-
-        frame.add(mainPanel, BorderLayout.CENTER);
-
-        // Add listeners
-        lengthSlider.addChangeListener(e -> {
-            int length = lengthSlider.getValue();
-            lengthValueLabel.setText("Length : " + length);
-            generatePassword();
-        });
-
-        includeUppercase.addActionListener(e -> generatePassword());
-        includeLowercase.addActionListener(e -> generatePassword());
-        includeNumbers.addActionListener(e -> generatePassword());
-        includeSymbols.addActionListener(e -> generatePassword());
-
-        // Generate initial password
-        generatePassword();
+        return savedPanel;
     }
 
     private void generatePassword() {
@@ -197,13 +209,13 @@ public class PasswordSentinel {
             strength += 2;
 
         if (password.matches(".*[A-Z].*"))
-            strength++; // Uppercase
+            strength++;
         if (password.matches(".*[a-z].*"))
-            strength++; // Lowercase
+            strength++;
         if (password.matches(".*\\d.*"))
-            strength++; // Numbers
+            strength++;
         if (password.matches(".*[^A-Za-z0-9].*"))
-            strength++; // Symbols
+            strength++;
 
         if (strength <= 2) {
             strengthIndicator.setText("Password Strength: Weak");
@@ -229,20 +241,20 @@ public class PasswordSentinel {
         String label = JOptionPane.showInputDialog(frame, "Enter label:");
         String password = passwordField.getText();
         if (label != null && !label.isEmpty()) {
-            savedPasswords.add(new PasswordEntry(label, password));
-            listModel.addElement(label + ": " + password); // Add password in readable format
-            savePasswords(); // Save the updated list to file
+            savedPasswords.add(new PasswordEntry(label, "", password));
+            tableModel.addRow(new Object[]{label, "", password});
+            savePasswords();
         } else {
             JOptionPane.showMessageDialog(frame, "Please enter a label.");
         }
     }
 
     private void deletePassword() {
-        int selectedIndex = savedPasswordsList.getSelectedIndex();
-        if (selectedIndex != -1) {
-            savedPasswords.remove(selectedIndex);
-            listModel.remove(selectedIndex);
-            savePasswords(); // Save the updated list to file
+        int selectedRow = savedPasswordsTable.getSelectedRow();
+        if (selectedRow != -1) {
+            savedPasswords.remove(selectedRow);
+            tableModel.removeRow(selectedRow);
+            savePasswords();
         }
     }
 
@@ -264,9 +276,9 @@ public class PasswordSentinel {
             String pass = passField.getText();
 
             if (!label.isEmpty() && !user.isEmpty() && !pass.isEmpty()) {
-                savedPasswords.add(new PasswordEntry(label, user, pass)); // store full entry
-                listModel.addElement(label + " (" + user + "): " + pass); // display in list
-                savePasswords(); // Save the updated list to file
+                savedPasswords.add(new PasswordEntry(label, user, pass));
+                tableModel.addRow(new Object[]{label, user, pass});
+                savePasswords();
             } else {
                 JOptionPane.showMessageDialog(frame, "All fields are required.");
             }
@@ -275,22 +287,40 @@ public class PasswordSentinel {
 
     private void savePasswords() {
         try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(STORAGE_FILE))) {
-            out.writeObject(savedPasswords); // Serialize the list of passwords
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void loadPasswords() {
-        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(STORAGE_FILE))) {
-            savedPasswords = (List<PasswordEntry>) in.readObject(); // Deserialize the saved passwords
+            List<String> encryptedPasswords = new ArrayList<>();
             for (PasswordEntry entry : savedPasswords) {
-                listModel.addElement(entry.label + " (" + entry.username + "): " + entry.password);
+                String serializedEntry = entry.label + "," + entry.username + "," + entry.password;
+                String encryptedEntry = EncryptionUtil.encrypt(serializedEntry);
+                encryptedPasswords.add(encryptedEntry);
             }
-        } catch (IOException | ClassNotFoundException e) {
+            out.writeObject(encryptedPasswords);
+        } catch (Exception e) {
             e.printStackTrace();
+            JOptionPane.showMessageDialog(frame, "Error saving passwords: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+    
+    @SuppressWarnings("unchecked")
+    private void loadPasswords() {
+        if (!STORAGE_FILE.exists()) {
+            return;
+        }
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(STORAGE_FILE))) {
+            List<String> encryptedPasswords = (List<String>) in.readObject();
+            for (String encryptedEntry : encryptedPasswords) {
+                String decryptedEntry = EncryptionUtil.decrypt(encryptedEntry);
+                String[] parts = decryptedEntry.split(",", 3);
+                if (parts.length == 3) {
+                    savedPasswords.add(new PasswordEntry(parts[0], parts[1], parts[2]));
+                    tableModel.addRow(new Object[]{parts[0], parts[1], parts[2]});
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(frame, "Error loading passwords: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(PasswordSentinel::new);
