@@ -1,190 +1,226 @@
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 
-public class PasswordSentinel {
-    private JFrame frame;
+public class PasswordSentinel extends JFrame {
+    private static final String UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private static final String LOWERCASE = "abcdefghijklmnopqrstuvwxyz";
+    private static final String NUMBERS = "0123456789";
+    private static final String SYMBOLS = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+    private static final File STORAGE_FILE = new File("passwords.dat");
+
+    private static final Color THEME_COLOR = new Color(230, 240, 255); // Light blue
+    private static final Color ACCENT_COLOR = new Color(70, 130, 180); // Steel blue
+
     private JTextField passwordField;
     private JSlider lengthSlider;
     private JLabel lengthValueLabel;
-    private JCheckBox includeUppercase;
-    private JCheckBox includeLowercase;
-    private JCheckBox includeNumbers;
-    private JCheckBox includeSymbols;
+    private JCheckBox includeUppercase, includeLowercase, includeNumbers, includeSymbols;
     private JLabel strengthIndicator;
-    private JLabel strengthImage;
     private List<PasswordEntry> savedPasswords;
-    private JTable savedPasswordsTable;
     private DefaultTableModel tableModel;
-
-    private final String UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    private final String LOWERCASE = "abcdefghijklmnopqrstuvwxyz";
-    private final String NUMBERS = "0123456789";
-    private final String SYMBOLS = "!@#$%^&*()_+-=[]{}|;:,.<>?";
-
-    private static final File STORAGE_FILE = new File("passwords.dat");
+    private JTable savedPasswordsTable;
 
     public PasswordSentinel() {
+        setTitle("Password Sentinel");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(800, 600);
+        setLayout(new BorderLayout());
+        getContentPane().setBackground(THEME_COLOR);
+
         savedPasswords = new ArrayList<>();
         tableModel = new DefaultTableModel(new String[]{"Label", "Username", "Password"}, 0);
 
-        frame = new JFrame("Password Sentinel");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(800, 600);
-        frame.setLayout(new BorderLayout());
-
-        // Load saved passwords from file
+        initializeUI();
         loadPasswords();
 
-        createUI();
-
-        frame.setVisible(true);
+        setVisible(true);
     }
 
-    private void createUI() {
-        JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new BorderLayout());
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        mainPanel.setBackground(new Color(240, 248, 255));
-
-        JPanel generatorPanel = createGeneratorPanel();
-        JPanel savedPanel = createSavedPasswordsPanel();
-
-        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, generatorPanel, savedPanel);
-        splitPane.setDividerLocation(300);
-        splitPane.setResizeWeight(0.5);
-        mainPanel.add(splitPane, BorderLayout.CENTER);
-
-        frame.add(mainPanel, BorderLayout.CENTER);
-
-        lengthSlider.addChangeListener(e -> {
-            int length = lengthSlider.getValue();
-            lengthValueLabel.setText("Length: " + length);
-            generatePassword();
-        });
-
-        includeUppercase.addActionListener(e -> generatePassword());
-        includeLowercase.addActionListener(e -> generatePassword());
-        includeNumbers.addActionListener(e -> generatePassword());
-        includeSymbols.addActionListener(e -> generatePassword());
-
-        generatePassword();
+    private void initializeUI() {
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.setBackground(THEME_COLOR);
+        tabbedPane.setForeground(ACCENT_COLOR);
+        tabbedPane.addTab("Generator", createGeneratorPanel());
+        tabbedPane.addTab("Saved Passwords", createSavedPasswordsPanel());
+        add(tabbedPane, BorderLayout.CENTER);
     }
 
     private JPanel createGeneratorPanel() {
-        JPanel generatorPanel = new JPanel();
-        generatorPanel.setLayout(new GridBagLayout());
-        generatorPanel.setBorder(BorderFactory.createTitledBorder("Password Generator"));
-        generatorPanel.setBackground(new Color(224, 255, 255));
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        panel.setBackground(THEME_COLOR);
 
+        JPanel topPanel = new JPanel(new BorderLayout(10, 0));
+        topPanel.setBackground(THEME_COLOR);
+        passwordField = new JTextField(20);
+        passwordField.setEditable(false);
+        passwordField.setFont(new Font("Monospaced", Font.PLAIN, 16));
+        passwordField.setBackground(Color.WHITE);
+        topPanel.add(passwordField, BorderLayout.CENTER);
+
+        JButton copyButton = createStyledButton("Copy");
+        copyButton.addActionListener(e -> copyPassword());
+        topPanel.add(copyButton, BorderLayout.EAST);
+
+        panel.add(topPanel, BorderLayout.NORTH);
+
+        JPanel centerPanel = new JPanel(new GridBagLayout());
+        centerPanel.setBackground(THEME_COLOR);
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.insets = new Insets(5, 5, 5, 5);
         gbc.anchor = GridBagConstraints.WEST;
 
         gbc.gridx = 0;
         gbc.gridy = 0;
+        gbc.gridwidth = 3;
+        JLabel lengthLabel = new JLabel("Password Length:");
+        lengthLabel.setForeground(ACCENT_COLOR);
+        centerPanel.add(lengthLabel, gbc);
+
+        gbc.gridy++;
         gbc.gridwidth = 2;
-        generatorPanel.add(new JLabel("Generate Your Password"), gbc);
-
-        gbc.gridwidth = 1;
-        gbc.gridy++;
-        passwordField = new JTextField(20);
-        passwordField.setEditable(false);
-        passwordField.setBackground(Color.WHITE);
-        generatorPanel.add(passwordField, gbc);
-
-        gbc.gridx++;
-        JButton copyButton = new JButton("Copy");
-        copyButton.addActionListener(e -> copyPassword());
-        generatorPanel.add(copyButton, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy++;
-        generatorPanel.add(new JLabel("Password Length:"), gbc);
-
-        gbc.gridx++;
         lengthSlider = new JSlider(6, 30, 12);
-        generatorPanel.add(lengthSlider, gbc);
+        lengthSlider.setBackground(THEME_COLOR);
+        lengthSlider.setForeground(ACCENT_COLOR);
+        centerPanel.add(lengthSlider, gbc);
 
-        gbc.gridx++;
-        lengthValueLabel = new JLabel("Length: 12");
-        generatorPanel.add(lengthValueLabel, gbc);
+        gbc.gridx = 2;
+        gbc.gridwidth = 1;
+        lengthValueLabel = new JLabel("12");
+        lengthValueLabel.setForeground(ACCENT_COLOR);
+        centerPanel.add(lengthValueLabel, gbc);
 
         gbc.gridx = 0;
         gbc.gridy++;
-        includeUppercase = new JCheckBox("Uppercase", true);
-        generatorPanel.add(includeUppercase, gbc);
+        gbc.gridwidth = 3;
+        includeUppercase = createStyledCheckBox("Uppercase", true);
+        centerPanel.add(includeUppercase, gbc);
 
         gbc.gridy++;
-        includeLowercase = new JCheckBox("Lowercase", true);
-        generatorPanel.add(includeLowercase, gbc);
+        includeLowercase = createStyledCheckBox("Lowercase", true);
+        centerPanel.add(includeLowercase, gbc);
 
         gbc.gridy++;
-        includeNumbers = new JCheckBox("Numbers", true);
-        generatorPanel.add(includeNumbers, gbc);
+        includeNumbers = createStyledCheckBox("Numbers", true);
+        centerPanel.add(includeNumbers, gbc);
 
         gbc.gridy++;
-        includeSymbols = new JCheckBox("Symbols", true);
-        generatorPanel.add(includeSymbols, gbc);
+        includeSymbols = createStyledCheckBox("Symbols", true);
+        centerPanel.add(includeSymbols, gbc);
 
         gbc.gridy++;
+        gbc.gridwidth = 3;
         strengthIndicator = new JLabel("Password Strength: Weak");
-        generatorPanel.add(strengthIndicator, gbc);
+        strengthIndicator.setForeground(ACCENT_COLOR);
+        centerPanel.add(strengthIndicator, gbc);
 
-        gbc.gridy++;
-        strengthImage = new JLabel();
-        generatorPanel.add(strengthImage, gbc);
+        panel.add(centerPanel, BorderLayout.CENTER);
 
-        return generatorPanel;
+        JButton generateButton = createStyledButton("Generate Password");
+        generateButton.addActionListener(e -> generatePassword());
+        panel.add(generateButton, BorderLayout.SOUTH);
+
+        setupListeners();
+
+        return panel;
     }
 
     private JPanel createSavedPasswordsPanel() {
-        JPanel savedPanel = new JPanel();
-        savedPanel.setLayout(new BorderLayout());
-        savedPanel.setBorder(BorderFactory.createTitledBorder("Saved Passwords"));
-        savedPanel.setBackground(new Color(240, 255, 240));
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        panel.setBackground(THEME_COLOR);
 
         savedPasswordsTable = new JTable(tableModel);
+        savedPasswordsTable.setBackground(Color.WHITE);
+        savedPasswordsTable.setForeground(ACCENT_COLOR);
+        savedPasswordsTable.setSelectionBackground(ACCENT_COLOR);
+        savedPasswordsTable.setSelectionForeground(Color.WHITE);
+        savedPasswordsTable.setGridColor(ACCENT_COLOR);
         JScrollPane scrollPane = new JScrollPane(savedPasswordsTable);
-        savedPanel.add(scrollPane, BorderLayout.CENTER);
+        scrollPane.getViewport().setBackground(THEME_COLOR);
+        panel.add(scrollPane, BorderLayout.CENTER);
 
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setBackground(new Color(240, 255, 240));
-
-        JButton saveButton = new JButton("Save Generated Password");
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        buttonPanel.setBackground(THEME_COLOR);
+        JButton saveButton = createStyledButton("Save Generated Password");
         saveButton.addActionListener(e -> savePassword());
         buttonPanel.add(saveButton);
 
-        JButton deleteButton = new JButton("Delete Selected");
+        JButton deleteButton = createStyledButton("Delete Selected");
         deleteButton.addActionListener(e -> deletePassword());
         buttonPanel.add(deleteButton);
 
-        JButton addManualButton = new JButton("Add Manual Entry");
+        JButton addManualButton = createStyledButton("Add Manual Entry");
         addManualButton.addActionListener(e -> addManualEntry());
         buttonPanel.add(addManualButton);
 
-        savedPanel.add(buttonPanel, BorderLayout.SOUTH);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
 
-        return savedPanel;
+        return panel;
+    }
+
+    private JButton createStyledButton(String text) {
+        JButton button = new JButton(text);
+        button.setBackground(ACCENT_COLOR);
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        return button;
+    }
+
+    private JCheckBox createStyledCheckBox(String text, boolean selected) {
+        JCheckBox checkBox = new JCheckBox(text, selected);
+        checkBox.setBackground(THEME_COLOR);
+        checkBox.setForeground(ACCENT_COLOR);
+        return checkBox;
+    }
+
+    private void setupListeners() {
+        lengthSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                int length = lengthSlider.getValue();
+                lengthValueLabel.setText(String.valueOf(length));
+                generatePassword();
+            }
+        });
+
+        ActionListener checkboxListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                generatePassword();
+            }
+        };
+
+        includeUppercase.addActionListener(checkboxListener);
+        includeLowercase.addActionListener(checkboxListener);
+        includeNumbers.addActionListener(checkboxListener);
+        includeSymbols.addActionListener(checkboxListener);
     }
 
     private void generatePassword() {
         int length = lengthSlider.getValue();
         StringBuilder charSet = new StringBuilder();
-        if (includeUppercase.isSelected())
-            charSet.append(UPPERCASE);
-        if (includeLowercase.isSelected())
-            charSet.append(LOWERCASE);
-        if (includeNumbers.isSelected())
-            charSet.append(NUMBERS);
-        if (includeSymbols.isSelected())
-            charSet.append(SYMBOLS);
+        if (includeUppercase.isSelected()) charSet.append(UPPERCASE);
+        if (includeLowercase.isSelected()) charSet.append(LOWERCASE);
+        if (includeNumbers.isSelected()) charSet.append(NUMBERS);
+        if (includeSymbols.isSelected()) charSet.append(SYMBOLS);
+
+        if (charSet.length() == 0) {
+            JOptionPane.showMessageDialog(this, "Please select at least one character type.");
+            return;
+        }
 
         String password = generateRandomPassword(charSet.toString(), length);
         passwordField.setText(password);
@@ -201,51 +237,57 @@ public class PasswordSentinel {
     }
 
     private void evaluateStrength(String password) {
+        int strength = calculatePasswordStrength(password);
+        updateStrengthIndicator(strength);
+    }
+
+    private int calculatePasswordStrength(String password) {
         int strength = 0;
+        if (password.length() >= 8 && password.length() <= 12) strength += 1;
+        else if (password.length() > 12) strength += 2;
+        if (password.matches(".*[A-Z].*")) strength++;
+        if (password.matches(".*[a-z].*")) strength++;
+        if (password.matches(".*\\d.*")) strength++;
+        if (password.matches(".*[^A-Za-z0-9].*")) strength++;
+        return strength;
+    }
 
-        if (password.length() >= 8 && password.length() <= 12)
-            strength += 1;
-        else if (password.length() > 12)
-            strength += 2;
-
-        if (password.matches(".*[A-Z].*"))
-            strength++;
-        if (password.matches(".*[a-z].*"))
-            strength++;
-        if (password.matches(".*\\d.*"))
-            strength++;
-        if (password.matches(".*[^A-Za-z0-9].*"))
-            strength++;
+    private void updateStrengthIndicator(int strength) {
+        String strengthText;
+        Color color;
 
         if (strength <= 2) {
-            strengthIndicator.setText("Password Strength: Weak");
-            strengthImage.setIcon(new ImageIcon("weak.png"));
-        } else if (strength >= 3 && strength <= 4) {
-            strengthIndicator.setText("Password Strength: Medium");
-            strengthImage.setIcon(new ImageIcon("medium.png"));
-        } else if (strength >= 5) {
-            strengthIndicator.setText("Password Strength: Strong");
-            strengthImage.setIcon(new ImageIcon("strong.png"));
+            strengthText = "Weak";
+            color = new Color(255, 87, 87); // Light red
+        } else if (strength <= 4) {
+            strengthText = "Medium";
+            color = new Color(255, 206, 86); // Light yellow
+        } else {
+            strengthText = "Strong";
+            color = new Color(97, 255, 66); // Light green
         }
+
+        strengthIndicator.setText("Password Strength: " + strengthText);
+        strengthIndicator.setForeground(color);
     }
 
     private void copyPassword() {
         String password = passwordField.getText();
-        StringSelection selection = new StringSelection(password);
-        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-        clipboard.setContents(selection, selection);
-        JOptionPane.showMessageDialog(frame, "Password copied to clipboard!");
+        if (!password.isEmpty()) {
+            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(password), null);
+            JOptionPane.showMessageDialog(this, "Password copied to clipboard!");
+        }
     }
 
     private void savePassword() {
-        String label = JOptionPane.showInputDialog(frame, "Enter label:");
+        String label = JOptionPane.showInputDialog(this, "Enter label:");
         String password = passwordField.getText();
-        if (label != null && !label.isEmpty()) {
+        if (label != null && !label.isEmpty() && !password.isEmpty()) {
             savedPasswords.add(new PasswordEntry(label, "", password));
             tableModel.addRow(new Object[]{label, "", password});
             savePasswords();
         } else {
-            JOptionPane.showMessageDialog(frame, "Please enter a label.");
+            JOptionPane.showMessageDialog(this, "Please enter a label and generate a password.");
         }
     }
 
@@ -255,32 +297,34 @@ public class PasswordSentinel {
             savedPasswords.remove(selectedRow);
             tableModel.removeRow(selectedRow);
             savePasswords();
+        } else {
+            JOptionPane.showMessageDialog(this, "Please select a password to delete.");
         }
     }
 
     private void addManualEntry() {
         JTextField labelField = new JTextField();
         JTextField userField = new JTextField();
-        JTextField passField = new JTextField();
+        JPasswordField passField = new JPasswordField();
         Object[] fields = {
                 "Label:", labelField,
                 "Username:", userField,
                 "Password:", passField
         };
 
-        int option = JOptionPane.showConfirmDialog(frame, fields, "Add Manual Entry", JOptionPane.OK_CANCEL_OPTION);
+        int option = JOptionPane.showConfirmDialog(this, fields, "Add Manual Entry", JOptionPane.OK_CANCEL_OPTION);
 
         if (option == JOptionPane.OK_OPTION) {
             String label = labelField.getText();
             String user = userField.getText();
-            String pass = passField.getText();
+            String pass = new String(passField.getPassword());
 
-            if (!label.isEmpty() && !user.isEmpty() && !pass.isEmpty()) {
+            if (!label.isEmpty() && !pass.isEmpty()) {
                 savedPasswords.add(new PasswordEntry(label, user, pass));
                 tableModel.addRow(new Object[]{label, user, pass});
                 savePasswords();
             } else {
-                JOptionPane.showMessageDialog(frame, "All fields are required.");
+                JOptionPane.showMessageDialog(this, "Label and password are required.");
             }
         }
     }
@@ -296,10 +340,10 @@ public class PasswordSentinel {
             out.writeObject(encryptedPasswords);
         } catch (Exception e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(frame, "Error saving passwords: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Error saving passwords: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-    
+
     @SuppressWarnings("unchecked")
     private void loadPasswords() {
         if (!STORAGE_FILE.exists()) {
@@ -308,22 +352,31 @@ public class PasswordSentinel {
         try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(STORAGE_FILE))) {
             List<String> encryptedPasswords = (List<String>) in.readObject();
             for (String encryptedEntry : encryptedPasswords) {
-                String decryptedEntry = EncryptionUtil.decrypt(encryptedEntry);
-                String[] parts = decryptedEntry.split(",", 3);
-                if (parts.length == 3) {
-                    savedPasswords.add(new PasswordEntry(parts[0], parts[1], parts[2]));
-                    tableModel.addRow(new Object[]{parts[0], parts[1], parts[2]});
+                try {
+                    String decryptedEntry = EncryptionUtil.decrypt(encryptedEntry);
+                    String[] parts = decryptedEntry.split(",", 3);
+                    if (parts.length == 3) {
+                        savedPasswords.add(new PasswordEntry(parts[0], parts[1], parts[2]));
+                        tableModel.addRow(new Object[]{parts[0], parts[1], parts[2]});
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "Error decrypting password: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(frame, "Error loading passwords: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Error loading passwords: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-    
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(PasswordSentinel::new);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new PasswordSentinel();
+            }
+        });
     }
 }
 
@@ -332,15 +385,22 @@ class PasswordEntry implements Serializable {
     String username;
     String password;
 
-    public PasswordEntry(String label, String password) {
-        this.label = label;
-        this.username = "";
-        this.password = password;
-    }
-
     public PasswordEntry(String label, String username, String password) {
         this.label = label;
         this.username = username;
         this.password = password;
+    }
+}
+
+class EncryptionUtil {
+    // Placeholder for encryption and decryption methods
+    public static String encrypt(String data) {
+        // Implement encryption logic here
+        return data;
+    }
+
+    public static String decrypt(String encryptedData) {
+        // Implement decryption logic here
+        return encryptedData;
     }
 }
