@@ -2,6 +2,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
@@ -11,6 +13,8 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
+import javax.swing.JProgressBar;
 
 public class PasswordSentinel extends JFrame {
     private static final String UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -306,13 +310,47 @@ public class PasswordSentinel extends JFrame {
         JTextField labelField = new JTextField();
         JTextField userField = new JTextField();
         JPasswordField passField = new JPasswordField();
-        Object[] fields = {
-                "Label:", labelField,
-                "Username:", userField,
-                "Password:", passField
-        };
+        JLabel strengthLabel = new JLabel("Password Strength: Weak");
+        strengthLabel.setForeground(new Color(255, 87, 87)); // Light red
 
-        int option = JOptionPane.showConfirmDialog(this, fields, "Add Manual Entry", JOptionPane.OK_CANCEL_OPTION);
+        JProgressBar strengthMeter = new JProgressBar(0, 5);
+        strengthMeter.setValue(0);
+        strengthMeter.setStringPainted(true);
+        strengthMeter.setString("Weak");
+
+        passField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                updateStrength();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                updateStrength();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                updateStrength();
+            }
+
+            private void updateStrength() {
+                String password = new String(passField.getPassword());
+                int strength = calculatePasswordStrength(password);
+                updateStrengthMeter(strengthMeter, strength);
+            }
+        });
+
+        JPanel panel = new JPanel(new GridLayout(0, 1));
+        panel.add(new JLabel("Label:"));
+        panel.add(labelField);
+        panel.add(new JLabel("Username:"));
+        panel.add(userField);
+        panel.add(new JLabel("Password:"));
+        panel.add(passField);
+        panel.add(strengthMeter);
+
+        int option = JOptionPane.showConfirmDialog(this, panel, "Add Manual Entry", JOptionPane.OK_CANCEL_OPTION);
 
         if (option == JOptionPane.OK_OPTION) {
             String label = labelField.getText();
@@ -327,6 +365,26 @@ public class PasswordSentinel extends JFrame {
                 JOptionPane.showMessageDialog(this, "Label and password are required.");
             }
         }
+    }
+
+    private void updateStrengthMeter(JProgressBar meter, int strength) {
+        meter.setValue(strength);
+        String strengthText;
+        Color color;
+
+        if (strength <= 2) {
+            strengthText = "Weak";
+            color = new Color(255, 87, 87); // Light red
+        } else if (strength <= 4) {
+            strengthText = "Medium";
+            color = new Color(255, 206, 86); // Light yellow
+        } else {
+            strengthText = "Strong";
+            color = new Color(97, 255, 66); // Light green
+        }
+
+        meter.setString(strengthText);
+        meter.setForeground(color);
     }
 
     private void savePasswords() {
