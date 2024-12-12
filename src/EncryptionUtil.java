@@ -33,18 +33,27 @@ public class EncryptionUtil {
         }
     }
 
-    public static String encrypt(String data) throws Exception {
-        Cipher cipher = Cipher.getInstance(TRANSFORMATION);
-        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-        byte[] encryptedBytes = cipher.doFinal(data.getBytes());
-        return Base64.getEncoder().encodeToString(encryptedBytes);
+    public static String encrypt(String data) {
+        try {
+            Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            byte[] encryptedBytes = cipher.doFinal(data.getBytes());
+            return Base64.getEncoder().encodeToString(encryptedBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return data; // Return original data in case of error
+        }
     }
 
-    public static String decrypt(String encryptedData) throws Exception {
-        Cipher cipher = Cipher.getInstance(TRANSFORMATION);
-        cipher.init(Cipher.DECRYPT_MODE, secretKey);
-        byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedData));
-        return new String(decryptedBytes);
+    public static String decrypt(String encryptedData) {
+        try {
+            Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+            cipher.init(Cipher.DECRYPT_MODE, secretKey);
+            byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedData));
+            return new String(decryptedBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return encryptedData; // Return encrypted data in case of error
+        }
     }
 }
-
