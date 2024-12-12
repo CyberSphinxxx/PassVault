@@ -13,8 +13,8 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-
-import javax.swing.JProgressBar;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.DefaultTableCellRenderer;
 
 public class PasswordSentinel extends JFrame {
     private static final String UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -30,7 +30,7 @@ public class PasswordSentinel extends JFrame {
     private JSlider lengthSlider;
     private JLabel lengthValueLabel;
     private JCheckBox includeUppercase, includeLowercase, includeNumbers, includeSymbols;
-    private JLabel strengthIndicator;
+    private JProgressBar strengthIndicator;
     private List<PasswordEntry> savedPasswords;
     private DefaultTableModel tableModel;
     private JTable savedPasswordsTable;
@@ -125,8 +125,9 @@ public class PasswordSentinel extends JFrame {
 
         gbc.gridy++;
         gbc.gridwidth = 3;
-        strengthIndicator = new JLabel("Password Strength: Weak");
-        strengthIndicator.setForeground(ACCENT_COLOR);
+        strengthIndicator = new JProgressBar(0, 5);
+        strengthIndicator.setStringPainted(true);
+        strengthIndicator.setString("Weak");
         centerPanel.add(strengthIndicator, gbc);
 
         panel.add(centerPanel, BorderLayout.CENTER);
@@ -145,12 +146,23 @@ public class PasswordSentinel extends JFrame {
         panel.setBorder(new EmptyBorder(20, 20, 20, 20));
         panel.setBackground(THEME_COLOR);
 
+        tableModel = new DefaultTableModel(new String[]{"Label", "Username", "Password", "Actions"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column == 3; // Only the "Actions" column is editable
+            }
+        };
         savedPasswordsTable = new JTable(tableModel);
         savedPasswordsTable.setBackground(Color.WHITE);
         savedPasswordsTable.setForeground(ACCENT_COLOR);
         savedPasswordsTable.setSelectionBackground(ACCENT_COLOR);
         savedPasswordsTable.setSelectionForeground(Color.WHITE);
         savedPasswordsTable.setGridColor(ACCENT_COLOR);
+
+        // Set up the "Reveal" button column
+        savedPasswordsTable.getColumnModel().getColumn(3).setCellRenderer(new ButtonRenderer());
+        savedPasswordsTable.getColumnModel().getColumn(3).setCellEditor(new ButtonEditor(new JCheckBox()));
+
         JScrollPane scrollPane = new JScrollPane(savedPasswordsTable);
         scrollPane.getViewport().setBackground(THEME_COLOR);
         panel.add(scrollPane, BorderLayout.CENTER);
@@ -228,7 +240,8 @@ public class PasswordSentinel extends JFrame {
 
         String password = generateRandomPassword(charSet.toString(), length);
         passwordField.setText(password);
-        evaluateStrength(password);
+        int strength = calculatePasswordStrength(password);
+        updateStrengthMeter(strengthIndicator, strength);
     }
 
     private String generateRandomPassword(String charSet, int length) {
@@ -238,11 +251,6 @@ public class PasswordSentinel extends JFrame {
             password.append(charSet.charAt(random.nextInt(charSet.length())));
         }
         return password.toString();
-    }
-
-    private void evaluateStrength(String password) {
-        int strength = calculatePasswordStrength(password);
-        updateStrengthIndicator(strength);
     }
 
     private int calculatePasswordStrength(String password) {
@@ -256,7 +264,8 @@ public class PasswordSentinel extends JFrame {
         return strength;
     }
 
-    private void updateStrengthIndicator(int strength) {
+    private void updateStrengthMeter(JProgressBar meter, int strength) {
+        meter.setValue(strength);
         String strengthText;
         Color color;
 
@@ -271,8 +280,8 @@ public class PasswordSentinel extends JFrame {
             color = new Color(97, 255, 66); // Light green
         }
 
-        strengthIndicator.setText("Password Strength: " + strengthText);
-        strengthIndicator.setForeground(color);
+        meter.setString(strengthText);
+        meter.setForeground(color);
     }
 
     private void copyPassword() {
@@ -285,10 +294,12 @@ public class PasswordSentinel extends JFrame {
 
     private void savePassword() {
         String label = JOptionPane.showInputDialog(this, "Enter label:");
+        String username = JOptionPane.showInputDialog(this, "Enter username (optional):");
         String password = passwordField.getText();
         if (label != null && !label.isEmpty() && !password.isEmpty()) {
-            savedPasswords.add(new PasswordEntry(label, "", password));
-            tableModel.addRow(new Object[]{label, "", password});
+            savedPasswords.add(new PasswordEntry(label, username, password));
+            tableModel.addRow(new Object[]{label, username, "********", "Reveal"});
+            JOptionPane.showMessageDialog(this, "Password saved:\nLabel: " + label + "\nUsername: " + username + "\nPassword: " + password);
             savePasswords();
         } else {
             JOptionPane.showMessageDialog(this, "Please enter a label and generate a password.");
@@ -310,9 +321,6 @@ public class PasswordSentinel extends JFrame {
         JTextField labelField = new JTextField();
         JTextField userField = new JTextField();
         JPasswordField passField = new JPasswordField();
-        JLabel strengthLabel = new JLabel("Password Strength: Weak");
-        strengthLabel.setForeground(new Color(255, 87, 87)); // Light red
-
         JProgressBar strengthMeter = new JProgressBar(0, 5);
         strengthMeter.setValue(0);
         strengthMeter.setStringPainted(true);
@@ -359,32 +367,12 @@ public class PasswordSentinel extends JFrame {
 
             if (!label.isEmpty() && !pass.isEmpty()) {
                 savedPasswords.add(new PasswordEntry(label, user, pass));
-                tableModel.addRow(new Object[]{label, user, pass});
+                tableModel.addRow(new Object[]{label, user, "********"});
                 savePasswords();
             } else {
                 JOptionPane.showMessageDialog(this, "Label and password are required.");
             }
         }
-    }
-
-    private void updateStrengthMeter(JProgressBar meter, int strength) {
-        meter.setValue(strength);
-        String strengthText;
-        Color color;
-
-        if (strength <= 2) {
-            strengthText = "Weak";
-            color = new Color(255, 87, 87); // Light red
-        } else if (strength <= 4) {
-            strengthText = "Medium";
-            color = new Color(255, 206, 86); // Light yellow
-        } else {
-            strengthText = "Strong";
-            color = new Color(97, 255, 66); // Light green
-        }
-
-        meter.setString(strengthText);
-        meter.setForeground(color);
     }
 
     private void savePasswords() {
@@ -415,7 +403,7 @@ public class PasswordSentinel extends JFrame {
                     String[] parts = decryptedEntry.split(",", 3);
                     if (parts.length == 3) {
                         savedPasswords.add(new PasswordEntry(parts[0], parts[1], parts[2]));
-                        tableModel.addRow(new Object[]{parts[0], parts[1], parts[2]});
+                        tableModel.addRow(new Object[]{parts[0], parts[1], "********", "Reveal"});
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -428,6 +416,14 @@ public class PasswordSentinel extends JFrame {
         }
     }
 
+    private void togglePasswordVisibility(int row) {
+        if (row != -1) {
+            String currentValue = (String) tableModel.getValueAt(row, 2);
+            String actualPassword = savedPasswords.get(row).password;
+            tableModel.setValueAt(currentValue.equals("********") ? actualPassword : "********", row, 2);
+        }
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -435,6 +431,54 @@ public class PasswordSentinel extends JFrame {
                 new PasswordSentinel();
             }
         });
+    }
+
+    class ButtonRenderer extends JButton implements TableCellRenderer {
+        public ButtonRenderer() {
+            setOpaque(true);
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            setText((value == null) ? "" : value.toString());
+            return this;
+        }
+    }
+
+    class ButtonEditor extends DefaultCellEditor {
+        protected JButton button;
+        private String label;
+        private boolean isPushed;
+
+        public ButtonEditor(JCheckBox checkBox) {
+            super(checkBox);
+            button = new JButton();
+            button.setOpaque(true);
+            button.addActionListener(e -> fireEditingStopped());
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+            label = (value == null) ? "" : value.toString();
+            button.setText(label);
+            isPushed = true;
+            return button;
+        }
+
+        @Override
+        public Object getCellEditorValue() {
+            if (isPushed) {
+                togglePasswordVisibility(savedPasswordsTable.getSelectedRow());
+            }
+            isPushed = false;
+            return label;
+        }
+
+        @Override
+        public boolean stopCellEditing() {
+            isPushed = false;
+            return super.stopCellEditing();
+        }
     }
 }
 
