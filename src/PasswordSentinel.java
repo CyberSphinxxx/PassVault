@@ -5,6 +5,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
@@ -13,8 +14,6 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.DefaultTableCellRenderer;
 
 public class PasswordSentinel extends JFrame {
     private static final String UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -43,7 +42,7 @@ public class PasswordSentinel extends JFrame {
         getContentPane().setBackground(THEME_COLOR);
 
         savedPasswords = new ArrayList<>();
-        tableModel = new DefaultTableModel(new String[]{"Label", "Username", "Password"}, 0);
+        tableModel = new DefaultTableModel(new String[]{"Label", "Username", "Password", "Actions"}, 0);
 
         initializeUI();
         loadPasswords();
@@ -176,6 +175,10 @@ public class PasswordSentinel extends JFrame {
         JButton deleteButton = createStyledButton("Delete Selected");
         deleteButton.addActionListener(e -> deletePassword());
         buttonPanel.add(deleteButton);
+
+        JButton editButton = createStyledButton("Edit Password");
+        editButton.addActionListener(e -> editPassword());
+        buttonPanel.add(editButton);
 
         JButton addManualButton = createStyledButton("Add Manual Entry");
         addManualButton.addActionListener(e -> addManualEntry());
@@ -317,6 +320,74 @@ public class PasswordSentinel extends JFrame {
         }
     }
 
+    private void editPassword() {
+        int selectedRow = savedPasswordsTable.getSelectedRow();
+        if (selectedRow != -1) {
+            PasswordEntry entry = savedPasswords.get(selectedRow);
+            JTextField labelField = new JTextField(entry.label);
+            JTextField userField = new JTextField(entry.username);
+            JPasswordField passField = new JPasswordField(entry.password);
+            JProgressBar strengthMeter = new JProgressBar(0, 5);
+            strengthMeter.setValue(calculatePasswordStrength(entry.password));
+            strengthMeter.setStringPainted(true);
+            updateStrengthMeter(strengthMeter, calculatePasswordStrength(entry.password));
+
+            passField.getDocument().addDocumentListener(new DocumentListener() {
+                @Override
+                public void insertUpdate(DocumentEvent e) {
+                    updateStrength();
+                }
+
+                @Override
+                public void removeUpdate(DocumentEvent e) {
+                    updateStrength();
+                }
+
+                @Override
+                public void changedUpdate(DocumentEvent e) {
+                    updateStrength();
+                }
+
+                private void updateStrength() {
+                    String password = new String(passField.getPassword());
+                    int strength = calculatePasswordStrength(password);
+                    updateStrengthMeter(strengthMeter, strength);
+                }
+            });
+
+            JPanel panel = new JPanel(new GridLayout(0, 1));
+            panel.add(new JLabel("Label:"));
+            panel.add(labelField);
+            panel.add(new JLabel("Username:"));
+            panel.add(userField);
+            panel.add(new JLabel("Password:"));
+            panel.add(passField);
+            panel.add(strengthMeter);
+
+            int option = JOptionPane.showConfirmDialog(this, panel, "Edit Password Entry", JOptionPane.OK_CANCEL_OPTION);
+
+            if (option == JOptionPane.OK_OPTION) {
+                String label = labelField.getText();
+                String user = userField.getText();
+                String pass = new String(passField.getPassword());
+
+                if (!label.isEmpty() && !pass.isEmpty()) {
+                    entry.label = label;
+                    entry.username = user;
+                    entry.password = pass;
+                    tableModel.setValueAt(label, selectedRow, 0);
+                    tableModel.setValueAt(user, selectedRow, 1);
+                    tableModel.setValueAt("********", selectedRow, 2);
+                    savePasswords();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Label and password are required.");
+                }
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Please select a password to edit.");
+        }
+    }
+
     private void addManualEntry() {
         JTextField labelField = new JTextField();
         JTextField userField = new JTextField();
@@ -367,7 +438,7 @@ public class PasswordSentinel extends JFrame {
 
             if (!label.isEmpty() && !pass.isEmpty()) {
                 savedPasswords.add(new PasswordEntry(label, user, pass));
-                tableModel.addRow(new Object[]{label, user, "********"});
+                tableModel.addRow(new Object[]{label, user, "********", "Reveal"});
                 savePasswords();
             } else {
                 JOptionPane.showMessageDialog(this, "Label and password are required.");
@@ -440,7 +511,7 @@ public class PasswordSentinel extends JFrame {
 
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            setText((value == null) ? "" : value.toString());
+            setText("Reveal");
             return this;
         }
     }
