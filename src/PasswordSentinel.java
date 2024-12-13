@@ -499,9 +499,84 @@ public class PasswordSentinel extends JFrame {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new PasswordSentinel();
+                showLoginDialog();
             }
         });
+    }
+
+    private static void showLoginDialog() {
+        JDialog loginDialog = new JDialog();
+        loginDialog.setTitle("Login");
+        loginDialog.setSize(400, 250);
+        loginDialog.setLayout(new BorderLayout());
+        loginDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        loginDialog.setLocationRelativeTo(null);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        panel.setBackground(THEME_COLOR);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.anchor = GridBagConstraints.WEST;
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        JLabel titleLabel = new JLabel("Password Sentinel Login");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        titleLabel.setForeground(ACCENT_COLOR);
+        panel.add(titleLabel, gbc);
+
+        gbc.gridy++;
+        gbc.gridwidth = 1;
+        JLabel userLabel = new JLabel("Username:");
+        userLabel.setForeground(ACCENT_COLOR);
+        panel.add(userLabel, gbc);
+
+        gbc.gridx = 1;
+        JTextField userField = new JTextField(20);
+        panel.add(userField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        JLabel passLabel = new JLabel("Password:");
+        passLabel.setForeground(ACCENT_COLOR);
+        panel.add(passLabel, gbc);
+
+        gbc.gridx = 1;
+        JPasswordField passField = new JPasswordField(20);
+        panel.add(passField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        gbc.gridwidth = 2;
+        JButton loginButton = new JButton("Login");
+        loginButton.setBackground(ACCENT_COLOR);
+        loginButton.setForeground(Color.WHITE);
+        loginButton.setFocusPainted(false);
+        loginButton.setBorderPainted(false);
+        panel.add(loginButton, gbc);
+
+        loginDialog.add(panel, BorderLayout.CENTER);
+
+        loginButton.addActionListener(e -> {
+            String username = userField.getText();
+            String password = new String(passField.getPassword());
+
+            if (validateLogin(username, password)) {
+                loginDialog.dispose();
+                new PasswordSentinel();
+            } else {
+                JOptionPane.showMessageDialog(loginDialog, "Invalid username or password.", "Login Failed", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        loginDialog.setVisible(true);
+    }
+
+    private static boolean validateLogin(String username, String password) {
+        // Replace with actual validation logic
+        return "admin".equals(username) && "admin".equals(password);
     }
 
     class ButtonRenderer extends JButton implements TableCellRenderer {
