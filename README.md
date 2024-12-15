@@ -1,16 +1,60 @@
-# PassVault
-Hello User do you always forget about your password accounts, are you in dire need of a list thats secure and trusted not like google notepad or notes. Well look no further introducing the all new ""Pass Vault""
-the PassVault not only keep those passwords safe in your very own device it also offer full privacy ensuring no sneaky onlookers are gonna know the password of your homework folders. ITS A GURANTEED SECURE VAULT.
-Disclaimer: the ""PassVualt"" uses a java swing GUI method to ensure all data stays only on your device ""PassVault"" is not eligible for your mishaps.![1](https://github.com/user-attachments/assets/7716fd4f-5aaa-4297-a560-c4b36378d952)
-![2](https://github.com/user-attachments/assets/36eb2577-d53f-4b79-9f9e-123fbeb76b4c)
-![3](https://github.com/user-attachments/assets/989b906f-f5b4-4b14-bcf6-ce2e4e31ab74)
-![4](https://github.com/user-attachments/assets/76e347d2-a15b-4cb1-9419-4882fcb62afa)
-![5](https://github.com/user-attachments/assets/089d0799-a22a-4c80-a71b-a7fcbc04f8d8)
-![6](https://github.com/user-attachments/assets/929de362-7444-4c4e-9b2e-fcbf5e5b8b92)
-![7](https://github.com/user-attachments/assets/c1d6c39d-e5c3-4258-9834-8bb1303b8ab3)
-![8](https://github.com/user-attachments/assets/f8e5edb8-3cfa-4899-a60f-b75a39ea0d09)
-![9](https://github.com/user-attachments/assets/2041727d-9923-4588-813d-62890dabf0e2)
-![10](https://github.com/user-attachments/assets/45942cf4-3dd4-4f73-8021-ceac04771d84)
-![11](https://github.com/user-attachments/assets/62ea84cb-a598-441c-80aa-03a2e9be0080)
-![12](https://github.com/user-attachments/assets/c2cfdac8-e31c-4318-a080-1a3cedc9699f)
-![13](https://github.com/user-attachments/assets/3e9f96d6-8f47-4fd5-98e7-c99b66c3a064)
+## PassVault Project Overview
+
+**Project Name:** PassVault
+
+**Objective:**
+The objective of this project is to create a secure, user-friendly application for generating, managing, and storing passwords. The application features a password generator, strength indicator, and a password manager that securely saves and retrieves passwords.
+
+**Technologies Used:**
+- Java Swing for GUI
+- Java I/O for file operations
+- Java Collections for data management
+
+### Key Components:
+
+1. **Password Generation:**
+   - **Character Sets:** Includes uppercase letters, lowercase letters, numbers, and symbols.
+   - **Length Control:** Allows users to set password length between 6 to 30 characters.
+   - **Options:** Users can choose which character sets to include in the generated password.
+
+2. **Password Strength Indicator:**
+   - **Criteria:** Evaluates password strength based on length, character variety (uppercase, lowercase, numbers, symbols).
+   - **Visualization:** Uses a `JProgressBar` to show password strength, with labels "Weak", "Medium", and "Strong".
+
+3. **Password Management:**
+   - **Saving Passwords:** Allows users to save generated passwords with labels and optional usernames.
+   - **Retrieving Passwords:** Stored passwords can be revealed or hidden, and managed through a table interface.
+   - **Editing and Deleting:** Users can edit or delete saved passwords.
+   - **Manual Entry:** Supports manual addition of passwords.
+
+4. **Encryption and Security:**
+   - **Storage:** Passwords are saved in an encrypted format in a file named `passwords.dat`.
+   - **Encryption Utility:** Placeholder for encryption and decryption methods (to be implemented).
+
+5. **User Interface:**
+   - **Tabbed Pane:** Divides functionality into two main tabs - "Generator" and "Saved Passwords".
+   - **Stylized Components:** Uses custom colors and fonts to enhance UI aesthetics.
+
+### UI Components:
+
+- **Generator Panel:**
+  - **Password Field:** Displays generated passwords.
+  - **Controls:** Sliders and checkboxes for password length and character set selection.
+  - **Buttons:** Includes "Generate Password" and "Copy".
+
+- **Saved Passwords Panel:**
+  - **Table:** Displays saved passwords with actions to reveal, edit, or delete.
+  - **Buttons:** Includes options to save generated passwords, delete selected passwords, edit passwords, and add manual entries.
+
+### Class Descriptions:
+
+- **PassVault:** Main class extending `JFrame` that sets up the UI and handles the core functionality.
+- **PasswordEntry:** Represents a password entry with label, username, and password.
+- **EncryptionUtil:** Placeholder class for encryption and decryption logic.
+- **ButtonRenderer & ButtonEditor:** Custom renderer and editor for table cell buttons.
+
+### Future Enhancements:
+
+- **Implement Encryption:** Replace placeholder methods in `EncryptionUtil` with actual encryption algorithms.
+- **Validation Logic:** Enhance login validation with a secure authentication mechanism.
+- **Backup and Sync:** Add features for password backup and synchronization across devices.
