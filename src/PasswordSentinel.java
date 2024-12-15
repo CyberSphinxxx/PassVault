@@ -14,6 +14,10 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.Base64;
 
 public class PasswordSentinel extends JFrame {
     private static final String UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -471,6 +475,7 @@ public class PasswordSentinel extends JFrame {
             for (String encryptedEntry : encryptedPasswords) {
                 try {
                     String decryptedEntry = EncryptionUtil.decrypt(encryptedEntry);
+                    System.out.println("Decrypted Entry: " + decryptedEntry); // Debug statement
                     String[] parts = decryptedEntry.split(",", 3);
                     if (parts.length == 3) {
                         savedPasswords.add(new PasswordEntry(parts[0], parts[1], parts[2]));
@@ -641,14 +646,23 @@ class PasswordEntry implements Serializable {
 }
 
 class EncryptionUtil {
-    // Placeholder for encryption and decryption methods
-    public static String encrypt(String data) {
-        // Implement encryption logic here
-        return data;
+    private static final String ALGORITHM = "AES";
+    private static final byte[] KEY = "1234567890123456".getBytes();
+
+    public static String encrypt(String data) throws Exception {
+        SecretKeySpec secretKey = new SecretKeySpec(KEY, ALGORITHM);
+        Cipher cipher = Cipher.getInstance(ALGORITHM);
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        byte[] encryptedBytes = cipher.doFinal(data.getBytes());
+        return Base64.getEncoder().encodeToString(encryptedBytes);
     }
 
-    public static String decrypt(String encryptedData) {
-        // Implement decryption logic here
-        return encryptedData;
+    public static String decrypt(String encryptedData) throws Exception {
+        SecretKeySpec secretKey = new SecretKeySpec(KEY, ALGORITHM);
+        Cipher cipher = Cipher.getInstance(ALGORITHM);
+        cipher.init(Cipher.DECRYPT_MODE, secretKey);
+        byte[] decodedBytes = Base64.getDecoder().decode(encryptedData);
+        byte[] decryptedBytes = cipher.doFinal(decodedBytes);
+        return new String(decryptedBytes);
     }
 }
