@@ -1,7 +1,12 @@
 # PassVault
 Hello User do you always forget about your password accounts, are you in dire need of a list thats secure and trusted not like google notepad or notes. Well look no further introducing the all new ""Pass Vault""
 the PassVault not only keep those passwords safe in your very own device it also offer full privacy ensuring no sneaky onlookers are gonna know the password of your homework folders. ITS A GURANTEED SECURE VAULT.
-Disclaimer: the ""PassVualt"" uses a java swing GUI method to ensure all data stays only on your device ""PassVault"" is not eligible for your mishaps.![1](https://github.com/user-attachments/assets/7716fd4f-5aaa-4297-a560-c4b36378d952)
+Disclaimer: the ""PassVualt"" uses a java swing GUI method to ensure all data stays only on your device ""PassVault"" is not eligible for your mishaps.
+
+Heres a basic tutorial to show you Dear user on how to use our program ✺◟(＾∇＾)◞✺
+
+![1](https://github.com/user-attachments/assets/7716fd4f-5aaa-4297-a560-c4b36378d952)
+![To Obtain your randomize password move this scroll bar (highlighted by red)](https://github.com/user-attachments/assets/db726018-3931-4a0b-a518-567df3fc51d3)
 ![2](https://github.com/user-attachments/assets/36eb2577-d53f-4b79-9f9e-123fbeb76b4c)
 ![3](https://github.com/user-attachments/assets/989b906f-f5b4-4b14-bcf6-ce2e4e31ab74)
 ![4](https://github.com/user-attachments/assets/76e347d2-a15b-4cb1-9419-4882fcb62afa)
