@@ -60,6 +60,7 @@ public class PasswordSentinel extends JFrame {
         tabbedPane.setForeground(ACCENT_COLOR);
         tabbedPane.addTab("Generator", createGeneratorPanel());
         tabbedPane.addTab("Saved Passwords", createSavedPasswordsPanel());
+        tabbedPane.addTab("Password Strength Checker", createPasswordStrengthCheckerPanel());
         add(tabbedPane, BorderLayout.CENTER);
     }
 
@@ -152,7 +153,7 @@ public class PasswordSentinel extends JFrame {
         tableModel = new DefaultTableModel(new String[]{"Label", "Username", "Password", "Actions"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return column == 3; // Only the "Actions" column is editable
+                return column == 3;
             }
         };
         savedPasswordsTable = new JTable(tableModel);
@@ -189,6 +190,83 @@ public class PasswordSentinel extends JFrame {
         buttonPanel.add(addManualButton);
 
         panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    private JPanel createPasswordStrengthCheckerPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        panel.setBackground(THEME_COLOR);
+
+        JPanel inputPanel = new JPanel(new BorderLayout(10, 10));
+        inputPanel.setBackground(THEME_COLOR);
+
+        JTextField passwordField = new JTextField(20);
+        passwordField.setFont(new Font("Monospaced", Font.PLAIN, 16));
+        inputPanel.add(passwordField, BorderLayout.CENTER);
+
+        JLabel strengthLabel = new JLabel("Password Strength: ");
+        strengthLabel.setForeground(ACCENT_COLOR);
+        inputPanel.add(strengthLabel, BorderLayout.WEST);
+
+        panel.add(inputPanel, BorderLayout.NORTH);
+
+        JProgressBar strengthIndicator = new JProgressBar(0, 5);
+        strengthIndicator.setStringPainted(true);
+        strengthIndicator.setString("Weak");
+        strengthIndicator.setPreferredSize(new Dimension(300, 20));
+        JPanel strengthPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        strengthPanel.setBackground(THEME_COLOR);
+        strengthPanel.add(strengthIndicator);
+        panel.add(strengthPanel, BorderLayout.CENTER);
+
+        passwordField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                updateStrength();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                updateStrength();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                updateStrength();
+            }
+
+            private void updateStrength() {
+                String password = passwordField.getText();
+                int strength = calculatePasswordStrength(password);
+                updateStrengthMeter(strengthIndicator, strength);
+            }
+        });
+
+        // Add password strength tips
+        JTextArea tipsArea = new JTextArea();
+        tipsArea.setEditable(false);
+        tipsArea.setBackground(THEME_COLOR);
+        tipsArea.setForeground(ACCENT_COLOR);
+        tipsArea.setFont(new Font("Arial", Font.PLAIN, 15));
+        tipsArea.setText(
+            "Password Strength Recommendations:\n" +
+            "   • Minimum 12 characters length\n" +
+            "   • Mix of uppercase and lowercase letters\n" +
+            "   • Include numbers and special characters\n" +
+            "   • Avoid personal information\n" +
+            "   • Use unique passwords for each account\n" +
+            "   • Consider using passphrases\n\n" +
+            "Security Best Practices:\n" +
+            "   • Regular Updates: Update passwords every 3-6 months\n" +
+            "   • Unique Passwords: Never reuse passwords across accounts\n" +
+            "   • Password Manager: Use a secure password manager\n" +
+            "   • Privacy Settings: Regularly review social media privacy"
+        );
+        JScrollPane tipsScrollPane = new JScrollPane(tipsArea);
+        tipsScrollPane.setPreferredSize(new Dimension(300, 250));
+        panel.add(tipsScrollPane, BorderLayout.SOUTH);
 
         return panel;
     }
@@ -475,7 +553,6 @@ public class PasswordSentinel extends JFrame {
             for (String encryptedEntry : encryptedPasswords) {
                 try {
                     String decryptedEntry = EncryptionUtil.decrypt(encryptedEntry);
-                    System.out.println("Decrypted Entry: " + decryptedEntry); // Debug statement
                     String[] parts = decryptedEntry.split(",", 3);
                     if (parts.length == 3) {
                         savedPasswords.add(new PasswordEntry(parts[0], parts[1], parts[2]));
@@ -666,3 +743,4 @@ class EncryptionUtil {
         return new String(decryptedBytes);
     }
 }
+
