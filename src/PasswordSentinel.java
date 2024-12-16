@@ -6,6 +6,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
@@ -38,6 +39,8 @@ public class PasswordSentinel extends JFrame {
     private List<PasswordEntry> savedPasswords;
     private DefaultTableModel tableModel;
     private JTable savedPasswordsTable;
+    private JTextField searchField;
+    private TableRowSorter<DefaultTableModel> sorter;
 
     public PasswordSentinel() {
         setTitle("Password Sentinel");
@@ -199,6 +202,15 @@ public class PasswordSentinel extends JFrame {
         panel.setBorder(new EmptyBorder(20, 20, 20, 20));
         panel.setBackground(THEME_COLOR);
 
+        // Add search field
+        searchField = new JTextField(20);
+        searchField.setFont(new Font("Arial", Font.PLAIN, 14));
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchPanel.setBackground(THEME_COLOR);
+        searchPanel.add(new JLabel("Search:"));
+        searchPanel.add(searchField);
+        panel.add(searchPanel, BorderLayout.NORTH);
+
         tableModel = new DefaultTableModel(new String[]{"Label", "Username", "Password", "Actions"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -218,9 +230,31 @@ public class PasswordSentinel extends JFrame {
         savedPasswordsTable.getColumnModel().getColumn(3).setCellRenderer(new ButtonRenderer());
         savedPasswordsTable.getColumnModel().getColumn(3).setCellEditor(new ButtonEditor(new JCheckBox()));
 
+        // Set up the sorter for filtering
+        sorter = new TableRowSorter<>(tableModel);
+        savedPasswordsTable.setRowSorter(sorter);
+
         JScrollPane scrollPane = new JScrollPane(savedPasswordsTable);
         scrollPane.getViewport().setBackground(THEME_COLOR);
         panel.add(scrollPane, BorderLayout.CENTER);
+
+        // Add search functionality
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                filterTable();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                filterTable();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                filterTable();
+            }
+        });
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonPanel.setBackground(THEME_COLOR);
@@ -240,6 +274,18 @@ public class PasswordSentinel extends JFrame {
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
         return panel;
+    }
+
+    private void filterTable() {
+        String searchText = searchField.getText().toLowerCase();
+        sorter.setRowFilter(new RowFilter<DefaultTableModel, Integer>() {
+            @Override
+            public boolean include(Entry<? extends DefaultTableModel, ? extends Integer> entry) {
+                String label = entry.getStringValue(0).toLowerCase();
+                String username = entry.getStringValue(1).toLowerCase();
+                return label.contains(searchText) || username.contains(searchText);
+            }
+        });
     }
 
     private JPanel createPasswordStrengthCheckerPanel() {
@@ -342,7 +388,8 @@ public class PasswordSentinel extends JFrame {
         lengthSlider.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
-                int length = lengthSlider.getValue();lengthValueLabel.setText(String.valueOf(length));
+                int length = lengthSlider.getValue();
+                lengthValueLabel.setText(String.valueOf(length));
                 generatePassword();
             }
         });
@@ -571,11 +618,12 @@ public class PasswordSentinel extends JFrame {
         }
     }
 
-    private void togglePasswordVisibility(int row) {
-        if (row != -1) {
-            String currentValue = (String) tableModel.getValueAt(row, 2);
-            String actualPassword = savedPasswords.get(row).password;
-            tableModel.setValueAt(currentValue.equals("********") ? actualPassword : "********", row, 2);
+    private void togglePasswordVisibility(int viewRow) {
+        if (viewRow != -1) {
+            int modelRow = savedPasswordsTable.convertRowIndexToModel(viewRow);
+            String currentValue = (String) tableModel.getValueAt(modelRow, 2);
+            String actualPassword = savedPasswords.get(modelRow).password;
+            tableModel.setValueAt(currentValue.equals("********") ? actualPassword : "********", modelRow, 2);
         }
     }
 
@@ -679,6 +727,7 @@ public class PasswordSentinel extends JFrame {
         protected JButton button;
         private String label;
         private boolean isPushed;
+        private int row;
 
         public ButtonEditor(JCheckBox checkBox) {
             super(checkBox);
@@ -689,6 +738,7 @@ public class PasswordSentinel extends JFrame {
 
         @Override
         public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+            this.row = row;
             label = (value == null) ? "" : value.toString();
             button.setText(label);
             isPushed = true;
@@ -698,7 +748,7 @@ public class PasswordSentinel extends JFrame {
         @Override
         public Object getCellEditorValue() {
             if (isPushed) {
-                togglePasswordVisibility(savedPasswordsTable.getSelectedRow());
+                togglePasswordVisibility(row);
             }
             isPushed = false;
             return label;
@@ -745,4 +795,3 @@ class EncryptionUtil {
         return new String(decryptedBytes);
     }
 }
-
