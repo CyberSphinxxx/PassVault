@@ -59,6 +59,7 @@ public class PasswordSentinel extends JFrame {
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setBackground(THEME_COLOR);
         tabbedPane.setForeground(TEXT_COLOR);
+        tabbedPane.setFont(new Font("Arial", Font.BOLD, 14));
         tabbedPane.addTab("Generator", createGeneratorPanel());
         tabbedPane.addTab("Saved Passwords", createSavedPasswordsPanel());
         tabbedPane.addTab("Password Strength Checker", createPasswordStrengthCheckerPanel());
@@ -78,7 +79,7 @@ public class PasswordSentinel extends JFrame {
         panel.setLayout(new FlowLayout(FlowLayout.LEFT, 20, 10));
 
         JLabel titleLabel = new JLabel("Password Sentinel");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 28));
         titleLabel.setForeground(Color.WHITE);
         panel.add(titleLabel);
 
@@ -93,6 +94,7 @@ public class PasswordSentinel extends JFrame {
 
         JLabel copyrightLabel = new JLabel("© 2023 Password Sentinel. All rights reserved.");
         copyrightLabel.setForeground(Color.WHITE);
+        copyrightLabel.setFont(new Font("Arial", Font.PLAIN, 12));
         panel.add(copyrightLabel);
 
         return panel;
@@ -107,7 +109,7 @@ public class PasswordSentinel extends JFrame {
         topPanel.setBackground(THEME_COLOR);
         passwordField = new JTextField(20);
         passwordField.setEditable(false);
-        passwordField.setFont(new Font("Monospaced", Font.PLAIN, 16));
+        passwordField.setFont(new Font("Monospaced", Font.PLAIN, 18));
         passwordField.setBackground(Color.WHITE);
         topPanel.add(passwordField, BorderLayout.CENTER);
 
@@ -120,7 +122,7 @@ public class PasswordSentinel extends JFrame {
         JPanel centerPanel = new JPanel(new GridBagLayout());
         centerPanel.setBackground(THEME_COLOR);
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.WEST;
 
         gbc.gridx = 0;
@@ -128,6 +130,7 @@ public class PasswordSentinel extends JFrame {
         gbc.gridwidth = 3;
         JLabel lengthLabel = new JLabel("Password Length:");
         lengthLabel.setForeground(TEXT_COLOR);
+        lengthLabel.setFont(new Font("Arial", Font.BOLD, 14));
         centerPanel.add(lengthLabel, gbc);
 
         gbc.gridy++;
@@ -141,6 +144,7 @@ public class PasswordSentinel extends JFrame {
         gbc.gridwidth = 1;
         lengthValueLabel = new JLabel("12");
         lengthValueLabel.setForeground(TEXT_COLOR);
+        lengthValueLabel.setFont(new Font("Arial", Font.BOLD, 14));
         centerPanel.add(lengthValueLabel, gbc);
 
         gbc.gridx = 0;
@@ -163,14 +167,16 @@ public class PasswordSentinel extends JFrame {
 
         gbc.gridy++;
         gbc.gridwidth = 3;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         strengthIndicator = new JProgressBar(0, 5);
         strengthIndicator.setStringPainted(true);
         strengthIndicator.setString("Weak");
+        strengthIndicator.setPreferredSize(new Dimension(300, 30));
         centerPanel.add(strengthIndicator, gbc);
 
         panel.add(centerPanel, BorderLayout.CENTER);
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
         buttonPanel.setBackground(THEME_COLOR);
 
         JButton generateButton = createStyledButton("Generate Password");
@@ -205,6 +211,8 @@ public class PasswordSentinel extends JFrame {
         savedPasswordsTable.setSelectionBackground(ACCENT_COLOR);
         savedPasswordsTable.setSelectionForeground(Color.WHITE);
         savedPasswordsTable.setGridColor(ACCENT_COLOR);
+        savedPasswordsTable.setFont(new Font("Arial", Font.PLAIN, 14));
+        savedPasswordsTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
 
         // Set up the "Reveal" button column
         savedPasswordsTable.getColumnModel().getColumn(3).setCellRenderer(new ButtonRenderer());
@@ -248,6 +256,7 @@ public class PasswordSentinel extends JFrame {
 
         JLabel strengthLabel = new JLabel("Password Strength: ");
         strengthLabel.setForeground(TEXT_COLOR);
+        strengthLabel.setFont(new Font("Arial", Font.BOLD, 14));
         inputPanel.add(strengthLabel, BorderLayout.WEST);
 
         panel.add(inputPanel, BorderLayout.NORTH);
@@ -255,7 +264,7 @@ public class PasswordSentinel extends JFrame {
         JProgressBar strengthIndicator = new JProgressBar(0, 5);
         strengthIndicator.setStringPainted(true);
         strengthIndicator.setString("Weak");
-        strengthIndicator.setPreferredSize(new Dimension(300, 20));
+        strengthIndicator.setPreferredSize(new Dimension(300, 30));
         JPanel strengthPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         strengthPanel.setBackground(THEME_COLOR);
         strengthPanel.add(strengthIndicator);
@@ -289,7 +298,7 @@ public class PasswordSentinel extends JFrame {
         tipsArea.setEditable(false);
         tipsArea.setBackground(THEME_COLOR);
         tipsArea.setForeground(TEXT_COLOR);
-        tipsArea.setFont(new Font("Arial", Font.PLAIN, 15));
+        tipsArea.setFont(new Font("Arial", Font.PLAIN, 14));
         tipsArea.setText(
             "Password Strength Requirements:\n" +
             "• Minimum 12 characters length\n" +
@@ -305,7 +314,7 @@ public class PasswordSentinel extends JFrame {
             "• Privacy Settings: Regularly review social media privacy"
         );
         JScrollPane tipsScrollPane = new JScrollPane(tipsArea);
-        tipsScrollPane.setPreferredSize(new Dimension(300, 240));
+        tipsScrollPane.setPreferredSize(new Dimension(300, 200));
         panel.add(tipsScrollPane, BorderLayout.SOUTH);
 
         return panel;
@@ -317,6 +326,7 @@ public class PasswordSentinel extends JFrame {
         button.setForeground(Color.WHITE);
         button.setFocusPainted(false);
         button.setBorderPainted(false);
+        button.setFont(new Font("Arial", Font.BOLD, 14));
         return button;
     }
 
@@ -324,6 +334,7 @@ public class PasswordSentinel extends JFrame {
         JCheckBox checkBox = new JCheckBox(text, selected);
         checkBox.setBackground(THEME_COLOR);
         checkBox.setForeground(TEXT_COLOR);
+        checkBox.setFont(new Font("Arial", Font.PLAIN, 14));
         return checkBox;
     }
 
@@ -331,8 +342,7 @@ public class PasswordSentinel extends JFrame {
         lengthSlider.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
-                int length = lengthSlider.getValue();
-                lengthValueLabel.setText(String.valueOf(length));
+                int length = lengthSlider.getValue();lengthValueLabel.setText(String.valueOf(length));
                 generatePassword();
             }
         });
@@ -418,13 +428,13 @@ public class PasswordSentinel extends JFrame {
     }
 
     private void savePassword() {
-        showSavePasswordDialog(passwordField.getText());
+        showSavePasswordDialog(passwordField.getText(), "", "");
     }
 
-    private void showSavePasswordDialog(String initialPassword) {
-        JPanel panel = new JPanel(new GridLayout(0, 1));
-        JTextField labelField = new JTextField();
-        JTextField usernameField = new JTextField();
+    private void showSavePasswordDialog(String initialPassword, String initialLabel, String initialUsername) {
+        JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
+        JTextField labelField = new JTextField(initialLabel);
+        JTextField usernameField = new JTextField(initialUsername);
         JPasswordField passwordField = new JPasswordField(initialPassword);
         JCheckBox showPasswordCheckBox = new JCheckBox("Show Password");
         JProgressBar strengthMeter = new JProgressBar(0, 5);
@@ -506,7 +516,7 @@ public class PasswordSentinel extends JFrame {
         int selectedRow = savedPasswordsTable.getSelectedRow();
         if (selectedRow != -1) {
             PasswordEntry entry = savedPasswords.get(selectedRow);
-            showSavePasswordDialog(entry.password);
+            showSavePasswordDialog(entry.password, entry.label, entry.username);
             tableModel.setValueAt(entry.label, selectedRow, 0);
             tableModel.setValueAt(entry.username, selectedRow, 1);
             tableModel.setValueAt("********", selectedRow, 2);
@@ -517,7 +527,7 @@ public class PasswordSentinel extends JFrame {
     }
 
     private void addManualEntry() {
-        showSavePasswordDialog("");
+        showSavePasswordDialog("", "", "");
     }
 
     private void savePasswords() {
@@ -735,3 +745,4 @@ class EncryptionUtil {
         return new String(decryptedBytes);
     }
 }
+
