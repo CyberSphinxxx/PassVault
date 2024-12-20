@@ -148,17 +148,6 @@ This file stores the encrypted password data. Each entry in the file is encrypte
 - Users should ensure their device is secure to protect the stored passwords and the encryption key
 - The passwords.dat file should be protected from unauthorized access
 
-## Future Improvements
-
-- Implement stronger encryption for stored passwords
-- Add multi-factor authentication for accessing the password manager
-- Implement password sharing functionality for team use
-- Add automatic password strength assessment for all saved passwords
-- Implement password expiration and rotation reminders
-- Implement secure key management for the encryption key, possibly using a key derivation function based on a master password
-- Add an option for users to change the encryption key
-- Implement secure deletion of the passwords.dat file when the user chooses to reset the password manager
-
 ## Contributors
 
 - @CyberSphinxxx
